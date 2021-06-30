@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 #[derive(Debug)]
 pub enum MyErrors {
+    MissingCommand,
     CannotReadDirectory,
 }
 
@@ -17,6 +18,14 @@ fn main() {
         None => help(),
         _ => create(),
     }
+}
+
+fn get_command_option() -> Result<String, MyErrors> {
+    let option = match args().nth(2) {
+        Some(value) => value,
+        None => return Err(MyErrors::MissingCommand),
+    };
+    Ok(option)
 }
 
 fn list() {
