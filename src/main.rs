@@ -8,16 +8,18 @@ pub enum MyErrors {
     CannotReadDirectory,
 }
 
-fn main() {
+fn main() -> Result<(), MyErrors> {
     let command = args().nth(1);
 
     match command.as_ref().map(String::as_ref) {
-        Some("list") => list(),
-        Some("recent") => recent(),
-        Some("help") => help(),
-        None => help(),
-        _ => create(),
-    }
+        Some("list") => list()?,
+        Some("recent") => recent()?,
+        Some("help") => help()?,
+        None => help()?,
+        _ => create()?,
+    };
+
+    Ok(())
 }
 
 fn get_command_option() -> Result<String, MyErrors> {
@@ -28,7 +30,7 @@ fn get_command_option() -> Result<String, MyErrors> {
     Ok(option)
 }
 
-fn list() {
+fn list() -> Result<(), MyErrors> {
     unimplemented!();
 }
 
@@ -56,14 +58,14 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
     return Ok(all_files);
 }
 
-fn recent() {
+fn recent() -> Result<(), MyErrors> {
     unimplemented!();
 }
 
-fn help() {
+fn help() -> Result<(), MyErrors> {
     unimplemented!();
 }
 
-fn create() {
+fn create() -> Result<(), MyErrors> {
     unimplemented!();
 }
