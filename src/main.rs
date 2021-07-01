@@ -31,7 +31,24 @@ fn get_command_option() -> Result<String, MyErrors> {
 }
 
 fn list() -> Result<(), MyErrors> {
-    unimplemented!();
+    let company = get_command_option()?;
+    let query = ["-", &company.to_lowercase(), "."].concat();
+    let root = PathBuf::from("/tmp/interviews");
+
+    if let Ok(all_files) = list_files(root) {
+        for path in all_files {
+            if path.display().to_string().contains(&query)
+                && path
+                    .extension()
+                    .map(|x| x == "md" || x == "eml")
+                    .unwrap_or(false)
+            {
+                println!("subl {:?}", path);
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
