@@ -72,6 +72,8 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
         return Err(MyErrors::CannotReadDirectory);
     }
 
+    all_files.sort();
+
     return Ok(all_files);
 }
 
