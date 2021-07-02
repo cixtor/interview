@@ -2,6 +2,8 @@ use std::env::args;
 use std::fs;
 use std::path::PathBuf;
 
+use chrono::Datelike;
+
 #[derive(Debug)]
 pub enum MyErrors {
     MissingCommand,
@@ -78,7 +80,18 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
 }
 
 fn recent() -> Result<(), MyErrors> {
-    unimplemented!();
+    let year = chrono::Utc::now().year();
+    let folder = ["/tmp/interviews/", &year.to_string()].concat();
+    let root = PathBuf::from(folder);
+
+    if let Ok(all_files) = list_files(root) {
+        let last_ten = all_files.iter().rev().take(10).rev();
+        for entry in last_ten {
+            println!("subl {:?}", entry);
+        }
+    }
+
+    Ok(())
 }
 
 fn help() -> Result<(), MyErrors> {
