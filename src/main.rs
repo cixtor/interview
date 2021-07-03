@@ -6,6 +6,7 @@ use chrono::Datelike;
 
 #[derive(Debug)]
 pub enum MyErrors {
+    FileNotFound,
     MissingCommand,
     CannotReadDirectory,
 }
@@ -14,6 +15,7 @@ fn main() -> Result<(), MyErrors> {
     let command = args().nth(1);
 
     match command.as_ref().map(String::as_ref) {
+        Some("open") => open()?,
         Some("list") => list()?,
         Some("recent") => recent()?,
         Some("help") => help()?,
@@ -30,6 +32,18 @@ fn get_command_option() -> Result<String, MyErrors> {
         None => return Err(MyErrors::MissingCommand),
     };
     Ok(option)
+}
+
+fn open() -> Result<(), MyErrors> {
+    let company = get_command_option()?;
+    let files = list_company_files(company)?;
+
+    if let Some(last_file) = files.iter().last() {
+        println!("subl {:?}", last_file);
+        return Ok(());
+    }
+
+    return Err(MyErrors::FileNotFound);
 }
 
 fn list() -> Result<(), MyErrors> {
