@@ -34,20 +34,10 @@ fn get_command_option() -> Result<String, MyErrors> {
 
 fn list() -> Result<(), MyErrors> {
     let company = get_command_option()?;
-    let query = ["-", &company.to_lowercase(), "."].concat();
-    let root = PathBuf::from("/tmp/interviews");
+    let files = list_company_files(company)?;
 
-    if let Ok(all_files) = list_files(root) {
-        for path in all_files {
-            if path.display().to_string().contains(&query)
-                && path
-                    .extension()
-                    .map(|x| x == "md" || x == "eml")
-                    .unwrap_or(false)
-            {
-                println!("subl {:?}", path);
-            }
-        }
+    for file in files {
+        println!("subl {:?}", file);
     }
 
     Ok(())
@@ -77,6 +67,27 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
     all_files.sort();
 
     return Ok(all_files);
+}
+
+fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
+    let mut files = Vec::new();
+    let query = ["-", &company.to_lowercase(), "."].concat();
+    let root = PathBuf::from("/tmp/interviews");
+
+    if let Ok(all_files) = list_files(root) {
+        for path in all_files {
+            if path.display().to_string().contains(&query)
+                && path
+                    .extension()
+                    .map(|x| x == "md" || x == "eml")
+                    .unwrap_or(false)
+            {
+                files.push(path)
+            }
+        }
+    }
+
+    Ok(files)
 }
 
 fn recent() -> Result<(), MyErrors> {
