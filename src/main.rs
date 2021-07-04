@@ -94,24 +94,20 @@ fn list() -> Result<(), MyErrors> {
 
 fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
     let mut all_files = Vec::new();
+    let entries = fs::read_dir(dir).map_err(|_| MyErrors::CannotReadDirectory)?;
 
-    if let Ok(entries) = fs::read_dir(dir) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                if let Ok(meta) = entry.metadata() {
-                    if meta.is_dir() {
-                        if let Ok(mut res) = list_files(entry.path()) {
-                            all_files.append(&mut res);
-                        }
-                    } else {
-                        all_files.push(entry.path());
-                    }
+    entries
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| entry.metadata().ok().map(|meta| (entry.path(), meta)))
+        .for_each(|(path, metadata)| {
+            if metadata.is_dir() {
+                if let Ok(mut res) = list_files(path) {
+                    all_files.append(&mut res);
                 }
+            } else {
+                all_files.push(path);
             }
-        }
-    } else {
-        return Err(MyErrors::CannotReadDirectory);
-    }
+        });
 
     all_files.sort();
 
