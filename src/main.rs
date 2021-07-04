@@ -1,5 +1,8 @@
 use std::env::args;
 use std::fs;
+use std::fs::File;
+use std::io::BufRead;
+use std::io::BufReader;
 use std::path::PathBuf;
 
 use chrono::Datelike;
@@ -9,6 +12,7 @@ pub enum MyErrors {
     FileNotFound,
     MissingCommand,
     CannotReadDirectory,
+    InvalidBoundaryLine,
 }
 
 fn main() -> Result<(), MyErrors> {
@@ -38,12 +42,43 @@ fn open() -> Result<(), MyErrors> {
     let company = get_command_option()?;
     let files = list_company_files(company)?;
 
-    if let Some(last_file) = files.iter().last() {
-        println!("subl {:?}", last_file);
-        return Ok(());
+    let path = match files.iter().last() {
+        Some(res) => res,
+        None => return Err(MyErrors::FileNotFound),
+    };
+
+    let mut marker = 0;
+    let mut boundary = String::from("--");
+    let file = File::open(path).unwrap();
+    let reader = BufReader::new(file);
+
+    for (index, line) in reader.lines().enumerate() {
+        let line = line.unwrap();
+
+        // Find the last occurrence of the email boundary.
+        if boundary.len() > 2 && line.eq(&boundary) {
+            marker = index;
+            continue;
+        }
+
+        // Skip lines that are not a boundary header.
+        if !line.contains("; boundary=") {
+            continue;
+        }
+
+        // Extract the email boundary code from the header.
+        if let Some(mark) = line.chars().position(|x| x == '=') {
+            boundary.push_str(line.get(mark + 1..).unwrap());
+            continue;
+        }
+
+        // Could not find an email boundary header anywhere.
+        return Err(MyErrors::InvalidBoundaryLine);
     }
 
-    return Err(MyErrors::FileNotFound);
+    println!("subl {:?}:{:?}", path, marker);
+
+    Ok(())
 }
 
 fn list() -> Result<(), MyErrors> {
