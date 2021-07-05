@@ -30,6 +30,14 @@ fn main() -> Result<(), MyErrors> {
     Ok(())
 }
 
+fn get_command() -> Result<String, MyErrors> {
+    let command = match args().nth(1) {
+        Some(value) => value,
+        None => return Err(MyErrors::MissingCommand),
+    };
+    Ok(command)
+}
+
 fn get_command_option() -> Result<String, MyErrors> {
     let option = match args().nth(2) {
         Some(value) => value,
