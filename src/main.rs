@@ -144,7 +144,7 @@ fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
 }
 
 fn recent() -> Result<(), MyErrors> {
-    let year = chrono::Utc::now().year();
+    let year = chrono::Local::now().year();
     let folder = ["/tmp/interviews/", &year.to_string()].concat();
     let root = PathBuf::from(folder);
 
@@ -163,5 +163,75 @@ fn help() -> Result<(), MyErrors> {
 }
 
 fn create() -> Result<(), MyErrors> {
-    unimplemented!();
+    let now = chrono::Local::now();
+    let company = get_command()?;
+    let shortdate = now.format("%Y%m%dT%H%M%S");
+    let basic_date = now.format("%Y-%m-%dT%H:%M:%SZ");
+    let human_date = now.format("%a, %d %b %Y %H:%M:%S %z");
+    let company_short = company.replace(" ", "-").to_lowercase();
+    let filename = format!(
+        "/tmp/interviews/{}/{}-{}.eml",
+        now.year(),
+        shortdate,
+        company_short
+    );
+    let description = "";
+    let employment = "fulltime, on-site, CITY";
+    let headquarters = "CITY, STATE, COUNTRY";
+    let industry = "";
+    let techstack = "";
+    let website = "URL";
+    let boundary = "5d23cd58f5670e2fcc07391a3a25";
+
+    let output = format!(
+        "MIME-Version: 1.0
+Date: {human_date}
+Message-ID: <{shortdate}-{company_short}@local.test>
+Subject: {company}, Software Engineer
+From: jobs@{company_short}.com
+To: cixtor@linkedin.test
+Content-Type: multipart/mixed; boundary={boundary}
+Description: {description}
+Employment: {employment}
+Headquarters: {headquarters}
+Industry: {industry}
+JobPostURL: URL
+Salary: Unknown|USD $0-$999999
+TechStack: {techstack}
+Website: {website}
+
+--{boundary}
+Author: them
+Comment: invitation received
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: {basic_date}
+
+
+
+--{boundary}
+Author: me
+Comment: invitation accepted
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: {basic_date}
+
+Thanks. Here’s my calendar: https://cixtor.com/calendar
+
+--{boundary}
+Author: them
+Comment: job description
+Content-Disposition: attachment; filename=\"job.md\"
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/markdown; charset=UTF-8
+
+
+
+--{boundary}--
+"
+    );
+
+    println!("{}", output);
+
+    Ok(())
 }
