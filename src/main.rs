@@ -162,6 +162,20 @@ fn help() -> Result<(), MyErrors> {
     unimplemented!();
 }
 
+fn generate_boundary() -> String {
+    use rand::Rng;
+    const CHARSET: &[u8] = b"0123456789abcdef";
+    let length = CHARSET.len();
+    let mut rng = rand::thread_rng();
+    let text = (0..28)
+        .map(|_| {
+            let idx = rng.gen_range(0..length);
+            CHARSET[idx] as char
+        })
+        .collect();
+    return text;
+}
+
 fn create() -> Result<(), MyErrors> {
     let now = chrono::Local::now();
     let company = get_command()?;
@@ -181,7 +195,7 @@ fn create() -> Result<(), MyErrors> {
     let industry = "";
     let techstack = "";
     let website = "URL";
-    let boundary = "5d23cd58f5670e2fcc07391a3a25";
+    let boundary = generate_boundary();
 
     let output = format!(
         "MIME-Version: 1.0
