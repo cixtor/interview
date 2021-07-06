@@ -3,6 +3,7 @@ use std::fs;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
+use std::path::Path;
 use std::path::PathBuf;
 
 use chrono::Datelike;
@@ -11,6 +12,7 @@ use chrono::Datelike;
 pub enum MyErrors {
     FileNotFound,
     MissingCommand,
+    FileAlreadyExists,
     CannotReadDirectory,
     InvalidBoundaryLine,
 }
@@ -189,6 +191,11 @@ fn create() -> Result<(), MyErrors> {
         shortdate,
         company_short
     );
+
+    if Path::new(&filename).exists() {
+        return Err(MyErrors::FileAlreadyExists);
+    }
+
     let description = "";
     let employment = "fulltime, on-site, CITY";
     let headquarters = "CITY, STATE, COUNTRY";
