@@ -178,6 +178,29 @@ fn generate_boundary() -> String {
     return text;
 }
 
+#[derive(Debug)]
+struct CompanyNotes {
+    description: String,
+    employment: String,
+    headquarters: String,
+    industry: String,
+    techstack: String,
+    website: String,
+}
+
+impl CompanyNotes {
+    fn new() -> CompanyNotes {
+        return CompanyNotes {
+            description: String::new(),
+            employment: String::from("fulltime, on-site, CITY"),
+            headquarters: String::from("CITY, STATE, COUNTRY"),
+            industry: String::new(),
+            techstack: String::new(),
+            website: String::from("URL"),
+        };
+    }
+}
+
 fn create() -> Result<(), MyErrors> {
     let now = chrono::Local::now();
     let company = get_command()?;
@@ -196,13 +219,16 @@ fn create() -> Result<(), MyErrors> {
         return Err(MyErrors::FileAlreadyExists);
     }
 
-    let description = "";
-    let employment = "fulltime, on-site, CITY";
-    let headquarters = "CITY, STATE, COUNTRY";
-    let industry = "";
-    let techstack = "";
-    let website = "URL";
+    let notes = CompanyNotes::new();
     let boundary = generate_boundary();
+
+    // Define detached variables to allow string interpolation.
+    let description = notes.description;
+    let employment = notes.employment;
+    let headquarters = notes.headquarters;
+    let industry = notes.industry;
+    let techstack = notes.techstack;
+    let website = notes.website;
 
     let output = format!(
         "MIME-Version: 1.0
