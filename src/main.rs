@@ -201,6 +201,52 @@ impl CompanyNotes {
     }
 }
 
+fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
+    let mut notes = CompanyNotes::new();
+    let company = get_command()?;
+    let files = list_company_files(company)?;
+    let path = match files.iter().last() {
+        Some(res) => res,
+        None => return Err(MyErrors::FileNotFound),
+    };
+    let file = File::open(path).unwrap();
+    let reader = BufReader::new(file);
+
+    for line in reader.lines().filter_map(|x| x.ok()) {
+        if line.starts_with("Description: ") {
+            notes.description = line.chars().skip(13).collect();
+            continue;
+        }
+
+        if line.starts_with("Employment: ") {
+            notes.employment = line.chars().skip(12).collect();
+            continue;
+        }
+
+        if line.starts_with("Headquarters: ") {
+            notes.headquarters = line.chars().skip(14).collect();
+            continue;
+        }
+
+        if line.starts_with("Industry: ") {
+            notes.industry = line.chars().skip(10).collect();
+            continue;
+        }
+
+        if line.starts_with("TechStack: ") {
+            notes.techstack = line.chars().skip(11).collect();
+            continue;
+        }
+
+        if line.starts_with("Website: ") {
+            notes.website = line.chars().skip(9).collect();
+            continue;
+        }
+    }
+
+    Ok(notes)
+}
+
 fn create() -> Result<(), MyErrors> {
     let now = chrono::Local::now();
     let company = get_command()?;
@@ -219,8 +265,13 @@ fn create() -> Result<(), MyErrors> {
         return Err(MyErrors::FileAlreadyExists);
     }
 
-    let notes = CompanyNotes::new();
+    let mut notes = CompanyNotes::new();
     let boundary = generate_boundary();
+
+    // Attempt to fill common metadata from previous notes.
+    if let Ok(prev_notes) = previous_company_notes() {
+        notes = prev_notes;
+    }
 
     // Define detached variables to allow string interpolation.
     let description = notes.description;
