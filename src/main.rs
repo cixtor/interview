@@ -3,6 +3,7 @@ use std::fs;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -15,6 +16,8 @@ pub enum MyErrors {
     FileAlreadyExists,
     CannotReadDirectory,
     InvalidBoundaryLine,
+    CannotCreateFile(std::io::Error),
+    CannotWriteToFile(std::io::Error),
 }
 
 fn main() -> Result<(), MyErrors> {
@@ -260,6 +263,7 @@ fn create() -> Result<(), MyErrors> {
         shortdate,
         company_short
     );
+    let result = format!("subl {}", filename.clone());
 
     if Path::new(&filename).exists() {
         return Err(MyErrors::FileAlreadyExists);
@@ -329,7 +333,15 @@ Content-Type: text/markdown; charset=UTF-8
 "
     );
 
-    println!("{}", output);
+    let mut file = match File::create(filename) {
+        Ok(myfile) => myfile,
+        Err(e) => return Err(MyErrors::CannotCreateFile(e)),
+    };
+
+    match file.write_all(&output.as_bytes()) {
+        Ok(_) => println!("{}", result),
+        Err(e) => return Err(MyErrors::CannotWriteToFile(e)),
+    }
 
     Ok(())
 }
