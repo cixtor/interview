@@ -164,7 +164,18 @@ fn recent() -> Result<(), MyErrors> {
 }
 
 fn help() -> Result<(), MyErrors> {
-    unimplemented!();
+    println!("Usage:");
+    println!("  interview [command] [options]");
+    println!("");
+    println!("Example:");
+    println!("  interview [company]         Creates a new .eml file for Company");
+    println!("  interview [company] [date]  Same as above but on a specific date");
+    println!("  interview help              Prints this message");
+    println!("  interview list [company]    Prints all .eml files for Company");
+    println!("  interview open [company]    Opens the most recent .eml file for Company");
+    println!("  interview recent            Prints the most recent ten files");
+
+    Ok(())
 }
 
 fn generate_boundary() -> String {
