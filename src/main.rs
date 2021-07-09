@@ -8,6 +8,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use chrono::Datelike;
+use chrono::TimeZone;
 
 #[derive(Debug)]
 pub enum MyErrors {
@@ -18,6 +19,9 @@ pub enum MyErrors {
     InvalidBoundaryLine,
     CannotCreateFile(std::io::Error),
     CannotWriteToFile(std::io::Error),
+    CannotParseCustomDate(chrono::ParseError),
+    CannotConvertToLocalTime,
+    InvalidCustomDatetime,
 }
 
 fn main() -> Result<(), MyErrors> {
@@ -261,8 +265,29 @@ fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
     Ok(notes)
 }
 
+fn read_custom_date() -> Result<chrono::DateTime<chrono::Local>, MyErrors> {
+    if let Ok(text) = get_command_option() {
+        let tformat: String = match text.len() {
+            16 => String::from("%Y-%m-%dT%H:%M"),    // 2006-01-02T15:04
+            19 => String::from("%Y-%m-%dT%H:%M:%S"), // 2006-01-02T15:04:05
+            _ => return Err(MyErrors::InvalidCustomDatetime), // anything else
+        };
+        let naive = match chrono::NaiveDateTime::parse_from_str(&text, &tformat) {
+            Ok(value) => value,
+            Err(e) => return Err(MyErrors::CannotParseCustomDate(e)),
+        };
+        let custom_time = match chrono::Local.from_local_datetime(&naive).single() {
+            Some(value) => value,
+            None => return Err(MyErrors::CannotConvertToLocalTime),
+        };
+        return Ok(custom_time);
+    }
+
+    Ok(chrono::Local::now())
+}
+
 fn create() -> Result<(), MyErrors> {
-    let now = chrono::Local::now();
+    let now = read_custom_date()?;
     let company = get_command()?;
     let shortdate = now.format("%Y%m%dT%H%M%S");
     let basic_date = now.format("%Y-%m-%dT%H:%M:%SZ");
