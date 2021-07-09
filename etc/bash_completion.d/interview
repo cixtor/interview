@@ -1,0 +1,28 @@
+#!/bin/bash
+# /usr/local/etc/bash_completion.d/interview
+function _interview() {
+	CURSOR="${COMP_WORDS[COMP_CWORD]}"
+	COMMANDS=""
+	COMMANDS+=" help"
+	COMMANDS+=" list"
+	COMMANDS+=" open"
+	COMMANDS+=" recent"
+
+	PREV_WORD="${COMP_WORDS[COMP_CWORD-1]}"
+	if [[ "$PREV_WORD" == "open" ]] ; then
+		COMPANIES=$(
+			find /tmp/interviews -type f -name "202*.eml" \
+			| xargs basename \
+			| cut -d- -f2 \
+			| cut -d. -f1 \
+			| sort -u \
+			| tr "\n" " "
+		)
+		COMMANDS+=" ${COMPANIES}"
+	fi
+
+	COMPREPLY=($(compgen -W "$COMMANDS" -- "$CURSOR"))
+	return 0
+}
+
+complete -F _interview interview
