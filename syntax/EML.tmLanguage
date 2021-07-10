@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>fileTypes</key>
+	<array>
+		<string>eml</string>
+	</array>
+	<key>name</key>
+	<string>EML</string>
+	<key>patterns</key>
+	<array>
+		<dict>
+			<key>match</key>
+			<string>^MIME-Version: [0-9\.]+</string>
+			<key>name</key>
+			<string>version.eml</string>
+		</dict>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>header.name.eml</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>header.value.eml</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>^(Date|Message-ID|Subject|From|To|Content-Type|Description|Employment|Headquarters|Industry|JobPostURL|Salary|TechStack|Website|Author|Comment|Content-Transfer-Encoding|Content-Disposition): (.+)</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>^\-\-\S+</string>
+			<key>name</key>
+			<string>boundary.eml</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>\S+@\S+</string>
+			<key>name</key>
+			<string>email.eml</string>
+		</dict>
+	</array>
+	<key>scopeName</key>
+	<string>source.eml</string>
+	<key>uuid</key>
+	<string>336ca33f-b8a0-0184-7f13-25b832fb67fb</string>
+</dict>
+</plist>
