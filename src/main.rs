@@ -6,6 +6,7 @@ use std::io::BufReader;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+use std::process::Command;
 
 use chrono::Datelike;
 use chrono::TimeZone;
@@ -93,7 +94,12 @@ fn open() -> Result<(), MyErrors> {
         return Err(MyErrors::InvalidBoundaryLine);
     }
 
-    println!("subl {:?}:{:?}", path, marker);
+    let file_arg = format!("{}:{}", path.display().to_string(), marker);
+
+    Command::new("subl")
+        .arg(file_arg)
+        .spawn()
+        .expect("cannot start subl");
 
     Ok(())
 }
