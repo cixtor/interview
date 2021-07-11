@@ -103,7 +103,7 @@ fn list() -> Result<(), MyErrors> {
     let files = list_company_files(company)?;
 
     for file in files {
-        println!("subl {:?}", file);
+        println!("$EDITOR {:?}", file);
     }
 
     Ok(())
@@ -160,7 +160,7 @@ fn recent() -> Result<(), MyErrors> {
     if let Ok(all_files) = list_files(root) {
         let last_ten = all_files.iter().rev().take(10).rev();
         for entry in last_ten {
-            println!("subl {:?}", entry);
+            println!("$EDITOR {:?}", entry);
         }
     }
 
