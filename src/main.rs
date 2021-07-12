@@ -99,7 +99,7 @@ fn open() -> Result<(), MyErrors> {
     Command::new("subl")
         .arg(file_arg)
         .spawn()
-        .expect("cannot start subl");
+        .expect("cannot spawn subl");
 
     Ok(())
 }
@@ -305,7 +305,7 @@ fn create() -> Result<(), MyErrors> {
         shortdate,
         company_short
     );
-    let result = format!("subl {}", filename.clone());
+    let file_arg = format!("{}:24", filename.clone());
 
     if Path::new(&filename).exists() {
         return Err(MyErrors::FileAlreadyExists);
@@ -381,9 +381,14 @@ Content-Type: text/markdown; charset=UTF-8
     };
 
     match file.write_all(&output.as_bytes()) {
-        Ok(_) => println!("{}", result),
+        Ok(_) => println!("success"),
         Err(e) => return Err(MyErrors::CannotWriteToFile(e)),
     }
+
+    Command::new("subl")
+        .arg(file_arg)
+        .spawn()
+        .expect("cannot spawn subl");
 
     Ok(())
 }
