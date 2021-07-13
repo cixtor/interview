@@ -6,3 +6,6 @@ install:
 uninstall:
 	rm -f -v -- /usr/local/bin/interview
 	rm -f -v -- /usr/local/etc/bash_completion.d/interview
+
+clean:
+	rm -r -f -v -- target
