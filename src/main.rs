@@ -117,24 +117,23 @@ fn list() -> Result<(), MyErrors> {
 
 fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
     let mut all_files = Vec::new();
-    let entries = fs::read_dir(dir).map_err(|_| MyErrors::CannotReadDirectory)?;
+    let mut stack = vec![dir];
 
-    entries
-        .filter_map(|entry| entry.ok())
-        .filter_map(|entry| entry.metadata().ok().map(|meta| (entry.path(), meta)))
-        .for_each(|(path, metadata)| {
-            if metadata.is_dir() {
-                if let Ok(mut res) = list_files(path) {
-                    all_files.append(&mut res);
-                }
-            } else {
-                all_files.push(path);
+    while let Some(current_dir) = stack.pop() {
+        let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            match entry.file_type() {
+                Ok(ft) if ft.is_dir() => stack.push(path),
+                Ok(ft) if ft.is_file() => all_files.push(path),
+                Ok(_) => {}
+                Err(_) => {}
             }
-        });
+        }
+    }
 
     all_files.sort();
-
-    return Ok(all_files);
+    Ok(all_files)
 }
 
 fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
