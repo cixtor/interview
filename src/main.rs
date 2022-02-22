@@ -141,19 +141,31 @@ fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
     let query = ["-", &company.to_lowercase(), "."].concat();
     let root = PathBuf::from("/tmp/interviews");
 
-    if let Ok(all_files) = list_files(root) {
-        for path in all_files {
-            if path.display().to_string().contains(&query)
-                && path
-                    .extension()
-                    .map(|x| x == "md" || x == "eml")
-                    .unwrap_or(false)
-            {
-                files.push(path)
+    let mut stack = vec![root];
+    while let Some(current_dir) = stack.pop() {
+        let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            match entry.file_type() {
+                Ok(ft) if ft.is_dir() => stack.push(path),
+                Ok(ft) if ft.is_file() => {
+                    let ext_ok = path
+                        .extension()
+                        .and_then(|e| e.to_str())
+                        .map(|e| e == "md" || e == "eml")
+                        .unwrap_or(false);
+
+                    if ext_ok && path.to_string_lossy().contains(&query) {
+                        files.push(path);
+                    }
+                }
+                Ok(_) => {}
+                Err(_) => {}
             }
         }
     }
 
+    files.sort();
     Ok(files)
 }
 
