@@ -34,6 +34,7 @@ fn main() -> Result<(), MyErrors> {
         Some("open") => open()?,
         Some("list") => list()?,
         Some("recent") => recent()?,
+        Some("search") => search()?,
         Some("help") => help()?,
         None => help()?,
         _ => create()?,
@@ -207,6 +208,10 @@ fn recent() -> Result<(), MyErrors> {
     Ok(())
 }
 
+fn search() -> Result<(), MyErrors> {
+    Ok(())
+}
+
 fn help() -> Result<(), MyErrors> {
     println!("Usage:");
     println!("  interview [command] [options]");
@@ -218,6 +223,7 @@ fn help() -> Result<(), MyErrors> {
     println!("  interview list [company]    Prints all .eml files for Company");
     println!("  interview open [company]    Opens the most recent .eml file for Company");
     println!("  interview recent            Prints the most recent ten files");
+    println!("  interview search [query]    Prints files that contain the query");
 
     Ok(())
 }
