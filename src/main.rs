@@ -7,6 +7,8 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
 
 use chrono::Datelike;
 use chrono::TimeZone;
@@ -173,12 +175,33 @@ fn recent() -> Result<(), MyErrors> {
     let year = chrono::Local::now().year();
     let folder = ["/tmp/interviews/", &year.to_string()].concat();
     let root = PathBuf::from(folder);
+    let mut stack = vec![PathBuf::from(folder)];
+    let mut heap: BinaryHeap<(Reverse<String>, PathBuf)> = BinaryHeap::new();
 
-    if let Ok(all_files) = list_files(root) {
-        let last_ten = all_files.iter().rev().take(10).rev();
-        for entry in last_ten {
-            println!("$EDITOR {:?}", entry);
+    while let Some(current_dir) = stack.pop() {
+        let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            match entry.file_type() {
+                Ok(ft) if ft.is_dir() => stack.push(path),
+                Ok(ft) if ft.is_file() => {
+                    let key = path.to_string_lossy().into_owned();
+                    heap.push((Reverse(key), path));
+                    if heap.len() > 10 {
+                        heap.pop(); // drop oldest (smallest) path so heap keeps the most recent lexicographically
+                    }
+                }
+                Ok(_) => {}
+                Err(_) => {}
+            }
         }
+    }
+
+    let mut last_ten: Vec<_> = heap.into_iter().collect();
+    last_ten.sort_by(|a, b| a.0.cmp(&b.0));
+
+    for (_, entry) in last_ten {
+        println!("$EDITOR {:?}", entry);
     }
 
     Ok(())
