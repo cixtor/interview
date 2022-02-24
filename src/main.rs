@@ -420,9 +420,8 @@ Content-Type: text/markdown; charset=UTF-8
         Err(e) => return Err(MyErrors::CannotCreateFile(e)),
     };
 
-    match file.write_all(&output.as_bytes()) {
-        Ok(_) => println!("success"),
-        Err(e) => return Err(MyErrors::CannotWriteToFile(e)),
+    if let Err(e) = file.write_all(&output.as_bytes()) {
+        return Err(MyErrors::CannotWriteToFile(e));
     }
 
     Command::new("subl")
