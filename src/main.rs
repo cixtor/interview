@@ -74,27 +74,27 @@ fn open() -> Result<(), MyErrors> {
     let reader = BufReader::new(file);
 
     for (index, line) in reader.lines().enumerate() {
-        let line = line.unwrap();
+        if let Ok(line) = line {
+            // Find the last occurrence of the email boundary.
+            if boundary.len() > 2 && line.eq(&boundary) {
+                marker = index;
+                continue;
+            }
 
-        // Find the last occurrence of the email boundary.
-        if boundary.len() > 2 && line.eq(&boundary) {
-            marker = index;
-            continue;
+            // Skip lines that are not a boundary header.
+            if !line.contains("; boundary=") {
+                continue;
+            }
+
+            // Extract the email boundary code from the header.
+            if let Some(mark) = line.chars().position(|x| x == '=') {
+                boundary.push_str(line.get(mark + 1..).unwrap());
+                continue;
+            }
+
+            // Could not find an email boundary header anywhere.
+            return Err(MyErrors::InvalidBoundaryLine);
         }
-
-        // Skip lines that are not a boundary header.
-        if !line.contains("; boundary=") {
-            continue;
-        }
-
-        // Extract the email boundary code from the header.
-        if let Some(mark) = line.chars().position(|x| x == '=') {
-            boundary.push_str(line.get(mark + 1..).unwrap());
-            continue;
-        }
-
-        // Could not find an email boundary header anywhere.
-        return Err(MyErrors::InvalidBoundaryLine);
     }
 
     let file_arg = format!("{}:{}", path.display().to_string(), marker);
