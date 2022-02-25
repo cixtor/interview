@@ -397,16 +397,16 @@ Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
 Date: {basic_date}
 
-
+...
 
 --{boundary}
 Author: me
-Comment: invitation accepted
+Comment: shared resume
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
 Date: {basic_date}
 
-Thanks. Here’s my calendar: https://cixtor.com/calendar
+/shared resume/
 
 --{boundary}
 Author: them
