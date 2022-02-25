@@ -312,7 +312,13 @@ fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
 }
 
 fn read_custom_date() -> Result<chrono::DateTime<chrono::Local>, MyErrors> {
-    if let Ok(text) = get_command_option() {
+    if let Ok(mut text) = get_command_option() {
+        if text.len() == 11 && text.starts_with("today@") {
+            // Support shorthand data inputs: today@15:04
+            let date = chrono::Local::now().format("%Y-%m-%d");
+            let hour = text.replace("today@", "");
+            text = format!("{}T{}", date, hour);
+        }
         let tformat: String = match text.len() {
             16 => String::from("%Y-%m-%dT%H:%M"),    // 2006-01-02T15:04
             19 => String::from("%Y-%m-%dT%H:%M:%S"), // 2006-01-02T15:04:05
