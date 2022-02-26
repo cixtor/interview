@@ -12,8 +12,8 @@ function _interview() {
 	PREV_WORD="${COMP_WORDS[COMP_CWORD-1]}"
 	if [[ "$PREV_WORD" == "open" ]] ; then
 		COMPANIES=$(
-			find /tmp/interviews -type f -name "202*.eml" \
-			| xargs basename \
+			find /tmp/interviews -type f -name "20*.eml" -print0 \
+			| xargs -0 basename \
 			| cut -d- -f2 \
 			| cut -d. -f1 \
 			| sort -u \
