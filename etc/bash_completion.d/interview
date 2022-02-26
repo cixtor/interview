@@ -7,6 +7,7 @@ function _interview() {
 	COMMANDS+=" list"
 	COMMANDS+=" open"
 	COMMANDS+=" recent"
+	COMMANDS+=" Unknown"
 
 	PREV_WORD="${COMP_WORDS[COMP_CWORD-1]}"
 	if [[ "$PREV_WORD" == "open" ]] ; then
