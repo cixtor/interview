@@ -276,35 +276,71 @@ fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
     let file = File::open(path).unwrap();
     let reader = BufReader::new(file);
 
-    for line in reader.lines().filter_map(|x| x.ok()) {
-        if line.starts_with("Description: ") {
-            notes.description = line.chars().skip(13).collect();
-            continue;
+    let mut remaining = 6;
+    let mut description_seen = false;
+    let mut employment_seen = false;
+    let mut headquarters_seen = false;
+    let mut industry_seen = false;
+    let mut techstack_seen = false;
+    let mut website_seen = false;
+
+    for line in reader.lines().flatten() {
+        if remaining == 0 {
+            break;
         }
 
-        if line.starts_with("Employment: ") {
-            notes.employment = line.chars().skip(12).collect();
-            continue;
+        if !description_seen {
+            if let Some(value) = line.strip_prefix("Description: ") {
+                notes.description = value.to_owned();
+                description_seen = true;
+                remaining -= 1;
+                continue;
+            }
         }
 
-        if line.starts_with("Headquarters: ") {
-            notes.headquarters = line.chars().skip(14).collect();
-            continue;
+        if !employment_seen {
+            if let Some(value) = line.strip_prefix("Employment: ") {
+                notes.employment = value.to_owned();
+                employment_seen = true;
+                remaining -= 1;
+                continue;
+            }
         }
 
-        if line.starts_with("Industry: ") {
-            notes.industry = line.chars().skip(10).collect();
-            continue;
+        if !headquarters_seen {
+            if let Some(value) = line.strip_prefix("Headquarters: ") {
+                notes.headquarters = value.to_owned();
+                headquarters_seen = true;
+                remaining -= 1;
+                continue;
+            }
         }
 
-        if line.starts_with("TechStack: ") {
-            notes.techstack = line.chars().skip(11).collect();
-            continue;
+        if !industry_seen {
+            if let Some(value) = line.strip_prefix("Industry: ") {
+                notes.industry = value.to_owned();
+                industry_seen = true;
+                remaining -= 1;
+                continue;
+            }
         }
 
-        if line.starts_with("Website: ") {
-            notes.website = line.chars().skip(9).collect();
-            continue;
+        if !techstack_seen {
+            if let Some(value) = line.strip_prefix("TechStack: ") {
+                notes.techstack = value.to_owned();
+                techstack_seen = true;
+                remaining -= 1;
+                continue;
+            }
+        }
+
+        if !website_seen {
+            if let Some(value) = line.strip_prefix("Website: ") {
+                notes.website = value.to_owned();
+                website_seen = true;
+                remaining -= 1;
+                continue;
+            }
         }
     }
 
