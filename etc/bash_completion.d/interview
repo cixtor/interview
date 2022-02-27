@@ -10,7 +10,7 @@ function _interview() {
 	COMMANDS+=" Unknown"
 
 	PREV_WORD="${COMP_WORDS[COMP_CWORD-1]}"
-	if [[ "$PREV_WORD" == "open" ]] ; then
+	if [ "$PREV_WORD" == "open" ] || [ "$PREV_WORD" == "list" ] ; then
 		COMPANIES=$(
 			find /tmp/interviews -type f -name "20*.eml" -print0 \
 			| xargs -0 basename \
