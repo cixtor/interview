@@ -59,14 +59,52 @@ fn get_command_option() -> Result<String, MyErrors> {
     Ok(option)
 }
 
+fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
+    let query = ["-", &company.to_lowercase(), "."].concat();
+    let root = PathBuf::from("/tmp/interviews");
+    let mut stack = vec![root];
+    let mut latest: Option<(String, PathBuf)> = None;
+
+    while let Some(current_dir) = stack.pop() {
+        let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            match entry.file_type() {
+                Ok(ft) if ft.is_dir() => stack.push(path),
+                Ok(ft) if ft.is_file() => {
+                    let ext_ok = path
+                        .extension()
+                        .and_then(|e| e.to_str())
+                        .map(|e| e == "md" || e == "eml")
+                        .unwrap_or(false);
+                    if !ext_ok {
+                        continue;
+                    }
+
+                    let path_str = path.to_string_lossy();
+                    if path_str.contains(&query) {
+                        if let Some((best_key, _)) = &latest {
+                            if *best_key >= path_str {
+                                continue;
+                            }
+                        }
+                        latest = Some((path_str.into_owned(), path));
+                    }
+                }
+                Ok(_) => {}
+                Err(_) => {}
+            }
+        }
+    }
+
+    latest
+        .map(|(_, path)| path)
+        .ok_or(MyErrors::FileNotFound)
+}
+
 fn open() -> Result<(), MyErrors> {
     let company = get_command_option()?;
-    let files = list_company_files(company)?;
-
-    let path = match files.iter().last() {
-        Some(res) => res,
-        None => return Err(MyErrors::FileNotFound),
-    };
+    let path = latest_company_file(company)?;
 
     let mut marker = 0;
     let mut boundary = String::from("--");
