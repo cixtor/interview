@@ -306,12 +306,8 @@ impl CompanyNotes {
 fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
     let mut notes = CompanyNotes::new();
     let company = get_command()?;
-    let files = list_company_files(company)?;
-    let path = match files.iter().last() {
-        Some(res) => res,
-        None => return Err(MyErrors::FileNotFound),
-    };
-    let file = File::open(path).unwrap();
+    let path = latest_company_file(company)?;
+    let file = File::open(&path).unwrap();
     let reader = BufReader::new(file);
 
     let mut remaining = 6;
