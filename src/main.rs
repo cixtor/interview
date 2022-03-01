@@ -66,7 +66,10 @@ fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
     let mut latest: Option<(String, PathBuf)> = None;
 
     while let Some(current_dir) = stack.pop() {
-        let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
+        let entries = match fs::read_dir(&current_dir) {
+            Ok(it) => it,
+            Err(_) => continue,
+        };
         for entry in entries.flatten() {
             let path = entry.path();
             match entry.file_type() {
@@ -184,7 +187,10 @@ fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
 
     let mut stack = vec![root];
     while let Some(current_dir) = stack.pop() {
-        let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
+        let entries = match fs::read_dir(&current_dir) {
+            Ok(it) => it,
+            Err(_) => continue,
+        };
         for entry in entries.flatten() {
             let path = entry.path();
             match entry.file_type() {
@@ -218,7 +224,10 @@ fn recent() -> Result<(), MyErrors> {
     let mut heap: BinaryHeap<(Reverse<String>, PathBuf)> = BinaryHeap::new();
 
     while let Some(current_dir) = stack.pop() {
-        let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
+        let entries = match fs::read_dir(&current_dir) {
+            Ok(it) => it,
+            Err(_) => continue,
+        };
         for entry in entries.flatten() {
             let path = entry.path();
             match entry.file_type() {
