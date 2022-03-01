@@ -63,7 +63,7 @@ fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
     let query = ["-", &company.to_lowercase(), "."].concat();
     let root = PathBuf::from("/tmp/interviews");
     let mut stack = vec![root];
-    let mut latest: Option<(String, PathBuf)> = None;
+    let mut latest: Option<PathBuf> = None;
 
     while let Some(current_dir) = stack.pop() {
         let entries = match fs::read_dir(&current_dir) {
@@ -84,15 +84,22 @@ fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
                         continue;
                     }
 
-                    let path_str = path.to_string_lossy();
-                    if path_str.contains(&query) {
-                        if let Some((best_key, _)) = &latest {
-                            if *best_key >= path_str {
-                                continue;
-                            }
-                        }
-                        latest = Some((path_str.into_owned(), path));
+                    let name_matches = path
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        .map(|name| name.contains(&query))
+                        .unwrap_or(false);
+                    if !name_matches {
+                        continue;
                     }
+
+                    if let Some(best) = &latest {
+                        if path <= *best {
+                            continue;
+                        }
+                    }
+
+                    latest = Some(path);
                 }
                 Ok(_) => {}
                 Err(_) => {}
@@ -100,9 +107,7 @@ fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
         }
     }
 
-    latest
-        .map(|(_, path)| path)
-        .ok_or(MyErrors::FileNotFound)
+    latest.ok_or(MyErrors::FileNotFound)
 }
 
 fn open() -> Result<(), MyErrors> {
