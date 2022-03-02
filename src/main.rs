@@ -206,8 +206,16 @@ fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
                         .and_then(|e| e.to_str())
                         .map(|e| e == "md" || e == "eml")
                         .unwrap_or(false);
+                    if !ext_ok {
+                        continue;
+                    }
 
-                    if ext_ok && path.to_string_lossy().contains(&query) {
+                    let name_matches = path
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        .map(|name| name.contains(&query))
+                        .unwrap_or(false);
+                    if name_matches {
                         files.push(path);
                     }
                 }
