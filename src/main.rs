@@ -117,30 +117,39 @@ fn open() -> Result<(), MyErrors> {
     let mut marker = 0;
     let mut boundary = String::from("--");
     let file = File::open(path).unwrap();
-    let reader = BufReader::new(file);
+    let mut reader = BufReader::new(file);
+    let mut line = String::new();
+    let mut index = 0;
 
-    for (index, line) in reader.lines().enumerate() {
-        if let Ok(line) = line {
-            // Find the last occurrence of the email boundary.
-            if boundary.len() > 2 && line.eq(&boundary) {
-                marker = index;
-                continue;
-            }
-
-            // Skip lines that are not a boundary header.
-            if !line.contains("; boundary=") {
-                continue;
-            }
-
-            // Extract the email boundary code from the header.
-            if let Some(mark) = line.chars().position(|x| x == '=') {
-                boundary.push_str(line.get(mark + 1..).unwrap());
-                continue;
-            }
-
-            // Could not find an email boundary header anywhere.
-            return Err(MyErrors::InvalidBoundaryLine);
+    loop {
+        line.clear();
+        let bytes = match reader.read_line(&mut line) {
+            Ok(n) => n,
+            Err(_) => break,
+        };
+        if bytes == 0 {
+            break;
         }
+
+        let trimmed = line.trim_end_matches(['\r', '\n']);
+
+        if boundary.len() > 2 && trimmed == boundary {
+            marker = index;
+        } else if trimmed.contains("; boundary=") {
+            // Extract the email boundary code from the header.
+            if let Some(mark) = trimmed.chars().position(|x| x == '=') {
+                if let Some(value) = trimmed.get(mark + 1..) {
+                    boundary.push_str(value);
+                } else {
+                    return Err(MyErrors::InvalidBoundaryLine);
+                }
+            } else {
+                // Could not find an email boundary header anywhere.
+                return Err(MyErrors::InvalidBoundaryLine);
+            }
+        }
+
+        index += 1;
     }
 
     let file_arg = format!("{}:{}", path.display().to_string(), marker);
