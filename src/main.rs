@@ -241,9 +241,8 @@ fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
 fn recent() -> Result<(), MyErrors> {
     let year = chrono::Local::now().year();
     let folder = ["/tmp/interviews/", &year.to_string()].concat();
-    let root = PathBuf::from(folder);
     let mut stack = vec![PathBuf::from(folder)];
-    let mut heap: BinaryHeap<(Reverse<String>, PathBuf)> = BinaryHeap::new();
+    let mut heap: BinaryHeap<Reverse<PathBuf>> = BinaryHeap::new();
 
     while let Some(current_dir) = stack.pop() {
         let entries = match fs::read_dir(&current_dir) {
@@ -255,8 +254,7 @@ fn recent() -> Result<(), MyErrors> {
             match entry.file_type() {
                 Ok(ft) if ft.is_dir() => stack.push(path),
                 Ok(ft) if ft.is_file() => {
-                    let key = path.to_string_lossy().into_owned();
-                    heap.push((Reverse(key), path));
+                    heap.push(Reverse(path));
                     if heap.len() > 10 {
                         heap.pop(); // drop oldest (smallest) path so heap keeps the most recent lexicographically
                     }
@@ -270,7 +268,7 @@ fn recent() -> Result<(), MyErrors> {
     let mut last_ten: Vec<_> = heap.into_iter().collect();
     last_ten.sort_by(|a, b| a.0.cmp(&b.0));
 
-    for (_, entry) in last_ten {
+    for Reverse(entry) in last_ten {
         println!("$EDITOR {:?}", entry);
     }
 
