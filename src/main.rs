@@ -3,6 +3,7 @@ use std::fs;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
+use std::io::BufWriter;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
@@ -444,13 +445,8 @@ fn create() -> Result<(), MyErrors> {
     let basic_date = now.format("%Y-%m-%dT%H:%M:%SZ");
     let human_date = now.format("%a, %d %b %Y %H:%M:%S %z");
     let company_short = company.replace(" ", "-").to_lowercase();
-    let filename = format!(
-        "/tmp/interviews/{}/{}-{}.eml",
-        now.year(),
-        shortdate,
-        company_short
-    );
-    let file_arg = format!("{}:24", filename.clone());
+    let filename = format!("/tmp/interviews/{}/{}-{}.eml", now.year(), shortdate, company_short);
+    let file_arg = format!("{}:24", filename);
 
     if Path::new(&filename).exists() {
         return Err(MyErrors::FileAlreadyExists);
@@ -472,7 +468,14 @@ fn create() -> Result<(), MyErrors> {
     let techstack = notes.techstack;
     let website = notes.website;
 
-    let output = format!(
+    let file = match File::create(&filename) {
+        Ok(myfile) => myfile,
+        Err(e) => return Err(MyErrors::CannotCreateFile(e)),
+    };
+    let mut writer = BufWriter::new(file);
+
+    if let Err(e) = write!(
+        writer,
         "MIME-Version: 1.0
 Date: {human_date}
 Message-ID: <{shortdate}-{company_short}@local.test>
@@ -518,14 +521,11 @@ Content-Type: text/markdown; charset=UTF-8
 
 --{boundary}--
 "
-    );
+    ) {
+        return Err(MyErrors::CannotWriteToFile(e));
+    }
 
-    let mut file = match File::create(filename) {
-        Ok(myfile) => myfile,
-        Err(e) => return Err(MyErrors::CannotCreateFile(e)),
-    };
-
-    if let Err(e) = file.write_all(&output.as_bytes()) {
+    if let Err(e) = writer.flush() {
         return Err(MyErrors::CannotWriteToFile(e));
     }
 
