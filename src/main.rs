@@ -416,12 +416,12 @@ fn read_custom_date() -> Result<chrono::DateTime<chrono::Local>, MyErrors> {
         if text.len() == 11 && text.starts_with("today@") {
             // Support shorthand data inputs: today@15:04
             let date = chrono::Local::now().format("%Y-%m-%d");
-            let hour = text.replace("today@", "");
+            let hour = &text[6..];
             text = format!("{}T{}", date, hour);
         }
-        let tformat: String = match text.len() {
-            16 => String::from("%Y-%m-%dT%H:%M"),    // 2006-01-02T15:04
-            19 => String::from("%Y-%m-%dT%H:%M:%S"), // 2006-01-02T15:04:05
+        let tformat: &str = match text.len() {
+            16 => "%Y-%m-%dT%H:%M",    // 2006-01-02T15:04
+            19 => "%Y-%m-%dT%H:%M:%S", // 2006-01-02T15:04:05
             _ => return Err(MyErrors::InvalidCustomDatetime), // anything else
         };
         let naive = match chrono::NaiveDateTime::parse_from_str(&text, &tformat) {
