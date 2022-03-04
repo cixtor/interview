@@ -191,7 +191,7 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
         }
     }
 
-    all_files.sort();
+    all_files.sort_unstable();
     Ok(all_files)
 }
 
@@ -235,7 +235,7 @@ fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
         }
     }
 
-    files.sort();
+    files.sort_unstable();
     Ok(files)
 }
 
@@ -267,7 +267,7 @@ fn recent() -> Result<(), MyErrors> {
     }
 
     let mut last_ten: Vec<_> = heap.into_iter().collect();
-    last_ten.sort_by(|a, b| a.0.cmp(&b.0));
+    last_ten.sort_unstable_by(|a, b| a.0.cmp(&b.0));
 
     for Reverse(entry) in last_ten {
         println!("$EDITOR {:?}", entry);
