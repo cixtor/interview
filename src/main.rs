@@ -299,15 +299,15 @@ fn help() -> Result<(), MyErrors> {
 fn generate_boundary() -> String {
     use rand::Rng;
     const CHARSET: &[u8] = b"0123456789abcdef";
-    let length = CHARSET.len();
     let mut rng = rand::thread_rng();
-    let text = (0..28)
-        .map(|_| {
-            let idx = rng.gen_range(0..length);
-            CHARSET[idx] as char
-        })
-        .collect();
-    return text;
+    let mut text = String::with_capacity(28);
+
+    for _ in 0..28 {
+        let idx = rng.gen_range(0..CHARSET.len());
+        text.push(CHARSET[idx] as char);
+    }
+
+    text
 }
 
 #[derive(Debug)]
