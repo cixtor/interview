@@ -338,7 +338,8 @@ fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
     let company = get_command()?;
     let path = latest_company_file(company)?;
     let file = File::open(&path).unwrap();
-    let reader = BufReader::new(file);
+    let mut reader = BufReader::new(file);
+    let mut line = String::new();
 
     let mut remaining = 6;
     let mut description_seen = false;
@@ -348,13 +349,24 @@ fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
     let mut techstack_seen = false;
     let mut website_seen = false;
 
-    for line in reader.lines().flatten() {
+    loop {
+        line.clear();
+        let bytes = match reader.read_line(&mut line) {
+            Ok(n) => n,
+            Err(_) => break,
+        };
+        if bytes == 0 {
+            break;
+        }
+
+        let trimmed = line.trim_end_matches(['\r', '\n']);
+
         if remaining == 0 {
             break;
         }
 
         if !description_seen {
-            if let Some(value) = line.strip_prefix("Description: ") {
+            if let Some(value) = trimmed.strip_prefix("Description: ") {
                 notes.description = value.to_owned();
                 description_seen = true;
                 remaining -= 1;
@@ -363,7 +375,7 @@ fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
         }
 
         if !employment_seen {
-            if let Some(value) = line.strip_prefix("Employment: ") {
+            if let Some(value) = trimmed.strip_prefix("Employment: ") {
                 notes.employment = value.to_owned();
                 employment_seen = true;
                 remaining -= 1;
@@ -372,7 +384,7 @@ fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
         }
 
         if !headquarters_seen {
-            if let Some(value) = line.strip_prefix("Headquarters: ") {
+            if let Some(value) = trimmed.strip_prefix("Headquarters: ") {
                 notes.headquarters = value.to_owned();
                 headquarters_seen = true;
                 remaining -= 1;
@@ -381,7 +393,7 @@ fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
         }
 
         if !industry_seen {
-            if let Some(value) = line.strip_prefix("Industry: ") {
+            if let Some(value) = trimmed.strip_prefix("Industry: ") {
                 notes.industry = value.to_owned();
                 industry_seen = true;
                 remaining -= 1;
@@ -390,7 +402,7 @@ fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
         }
 
         if !techstack_seen {
-            if let Some(value) = line.strip_prefix("TechStack: ") {
+            if let Some(value) = trimmed.strip_prefix("TechStack: ") {
                 notes.techstack = value.to_owned();
                 techstack_seen = true;
                 remaining -= 1;
@@ -399,7 +411,7 @@ fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
         }
 
         if !website_seen {
-            if let Some(value) = line.strip_prefix("Website: ") {
+            if let Some(value) = trimmed.strip_prefix("Website: ") {
                 notes.website = value.to_owned();
                 website_seen = true;
                 remaining -= 1;
