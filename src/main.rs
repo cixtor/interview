@@ -1,6 +1,7 @@
 use std::env::args;
 use std::fs;
 use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::io::BufWriter;
@@ -460,10 +461,6 @@ fn create() -> Result<(), MyErrors> {
     let filename = format!("/tmp/interviews/{}/{}-{}.eml", now.year(), shortdate, company_short);
     let file_arg = format!("{}:24", filename);
 
-    if Path::new(&filename).exists() {
-        return Err(MyErrors::FileAlreadyExists);
-    }
-
     let mut notes = CompanyNotes::new();
     let boundary = generate_boundary();
 
@@ -480,7 +477,11 @@ fn create() -> Result<(), MyErrors> {
     let techstack = notes.techstack;
     let website = notes.website;
 
-    let file = match File::create(&filename) {
+    let file = match OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&filename)
+    {
         Ok(myfile) => myfile,
         Err(e) => return Err(MyErrors::CannotCreateFile(e)),
     };
