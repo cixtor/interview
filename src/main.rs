@@ -65,7 +65,7 @@ fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
     let query = ["-", &company.to_lowercase(), "."].concat();
     let root = PathBuf::from("/tmp/interviews");
     let mut stack = vec![root];
-    let mut latest: Option<PathBuf> = None;
+    let mut latest: Option<(String, PathBuf)> = None;
 
     while let Some(current_dir) = stack.pop() {
         let entries = match fs::read_dir(&current_dir) {
@@ -77,31 +77,25 @@ fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
             match entry.file_type() {
                 Ok(ft) if ft.is_dir() => stack.push(path),
                 Ok(ft) if ft.is_file() => {
+                    let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+                        continue;
+                    };
                     let ext_ok = path
                         .extension()
                         .and_then(|e| e.to_str())
                         .map(|e| e == "md" || e == "eml")
                         .unwrap_or(false);
-                    if !ext_ok {
+                    if !ext_ok || !name.contains(&query) {
                         continue;
                     }
 
-                    let name_matches = path
-                        .file_name()
-                        .and_then(|name| name.to_str())
-                        .map(|name| name.contains(&query))
-                        .unwrap_or(false);
-                    if !name_matches {
-                        continue;
-                    }
-
-                    if let Some(best) = &latest {
-                        if path <= *best {
+                    if let Some((best_name, _)) = &latest {
+                        if name <= best_name.as_str() {
                             continue;
                         }
                     }
 
-                    latest = Some(path);
+                    latest = Some((name.to_owned(), path));
                 }
                 Ok(_) => {}
                 Err(_) => {}
@@ -109,7 +103,7 @@ fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
         }
     }
 
-    latest.ok_or(MyErrors::FileNotFound)
+    latest.map(|(_, path)| path).ok_or(MyErrors::FileNotFound)
 }
 
 fn open() -> Result<(), MyErrors> {
