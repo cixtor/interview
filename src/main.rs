@@ -191,11 +191,12 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
 }
 
 fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
-    let mut files = Vec::new();
+    let mut files = Vec::with_capacity(64);
     let query = ["-", &company.to_lowercase(), "."].concat();
     let root = PathBuf::from("/tmp/interviews");
 
-    let mut stack = vec![root];
+    let mut stack = Vec::with_capacity(32);
+    stack.push(root);
     while let Some(current_dir) = stack.pop() {
         let entries = match fs::read_dir(&current_dir) {
             Ok(it) => it,
