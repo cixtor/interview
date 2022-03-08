@@ -64,7 +64,8 @@ fn get_command_option() -> Result<String, MyErrors> {
 fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
     let query = ["-", &company.to_lowercase(), "."].concat();
     let root = PathBuf::from("/tmp/interviews");
-    let mut stack = vec![root];
+    let mut stack = Vec::with_capacity(32);
+    stack.push(root);
     let mut latest: Option<(String, PathBuf)> = None;
 
     while let Some(current_dir) = stack.pop() {
@@ -73,33 +74,35 @@ fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
             Err(_) => continue,
         };
         for entry in entries.flatten() {
-            let path = entry.path();
-            match entry.file_type() {
-                Ok(ft) if ft.is_dir() => stack.push(path),
-                Ok(ft) if ft.is_file() => {
-                    let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
-                        continue;
-                    };
-                    let ext_ok = path
-                        .extension()
-                        .and_then(|e| e.to_str())
-                        .map(|e| e == "md" || e == "eml")
-                        .unwrap_or(false);
-                    if !ext_ok || !name.contains(&query) {
-                        continue;
-                    }
+            let file_type = match entry.file_type() {
+                Ok(ft) => ft,
+                Err(_) => continue,
+            };
 
-                    if let Some((best_name, _)) = &latest {
-                        if name <= best_name.as_str() {
-                            continue;
-                        }
-                    }
-
-                    latest = Some((name.to_owned(), path));
-                }
-                Ok(_) => {}
-                Err(_) => {}
+            if file_type.is_dir() {
+                stack.push(entry.path());
+                continue;
             }
+
+            if !file_type.is_file() {
+                continue;
+            }
+
+            let name_os = entry.file_name();
+            let Some(name) = name_os.to_str() else {
+                continue;
+            };
+            if !(name.ends_with(".md") || name.ends_with(".eml")) || !name.contains(&query) {
+                continue;
+            }
+
+            if let Some((best_name, _)) = &latest {
+                if name <= best_name.as_str() {
+                    continue;
+                }
+            }
+
+            latest = Some((name.to_owned(), entry.path()));
         }
     }
 
@@ -203,31 +206,29 @@ fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
             Err(_) => continue,
         };
         for entry in entries.flatten() {
-            let path = entry.path();
-            match entry.file_type() {
-                Ok(ft) if ft.is_dir() => stack.push(path),
-                Ok(ft) if ft.is_file() => {
-                    let ext_ok = path
-                        .extension()
-                        .and_then(|e| e.to_str())
-                        .map(|e| e == "md" || e == "eml")
-                        .unwrap_or(false);
-                    if !ext_ok {
-                        continue;
-                    }
+            let file_type = match entry.file_type() {
+                Ok(ft) => ft,
+                Err(_) => continue,
+            };
 
-                    let name_matches = path
-                        .file_name()
-                        .and_then(|name| name.to_str())
-                        .map(|name| name.contains(&query))
-                        .unwrap_or(false);
-                    if name_matches {
-                        files.push(path);
-                    }
-                }
-                Ok(_) => {}
-                Err(_) => {}
+            if file_type.is_dir() {
+                stack.push(entry.path());
+                continue;
             }
+
+            if !file_type.is_file() {
+                continue;
+            }
+
+            let name_os = entry.file_name();
+            let Some(name) = name_os.to_str() else {
+                continue;
+            };
+            if !(name.ends_with(".md") || name.ends_with(".eml")) || !name.contains(&query) {
+                continue;
+            }
+
+            files.push(entry.path());
         }
     }
 
