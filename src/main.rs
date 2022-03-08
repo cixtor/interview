@@ -173,8 +173,9 @@ fn list() -> Result<(), MyErrors> {
 }
 
 fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
-    let mut all_files = Vec::new();
-    let mut stack = vec![dir];
+    let mut all_files = Vec::with_capacity(128);
+    let mut stack = Vec::with_capacity(32);
+    stack.push(dir);
 
     while let Some(current_dir) = stack.pop() {
         let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
