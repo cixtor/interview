@@ -150,7 +150,7 @@ fn open() -> Result<(), MyErrors> {
         index += 1;
     }
 
-    let file_arg = format!("{}:{}", path.display().to_string(), marker);
+    let file_arg = format!("{}:{}", path.display(), marker);
 
     Command::new("subl")
         .arg(file_arg)
