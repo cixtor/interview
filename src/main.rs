@@ -60,7 +60,7 @@ fn get_command_option() -> Result<String, MyErrors> {
     Ok(option)
 }
 
-fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
+fn latest_company_file(company: &str) -> Result<PathBuf, MyErrors> {
     let query = ["-", &company.to_lowercase(), "."].concat();
     let root = PathBuf::from("/tmp/interviews");
     let mut stack = Vec::with_capacity(32);
@@ -110,7 +110,7 @@ fn latest_company_file(company: String) -> Result<PathBuf, MyErrors> {
 
 fn open() -> Result<(), MyErrors> {
     let company = get_command_option()?;
-    let path = latest_company_file(company)?;
+    let path = latest_company_file(&company)?;
 
     let mut marker = 0;
     let mut boundary = String::from("--");
@@ -162,7 +162,7 @@ fn open() -> Result<(), MyErrors> {
 
 fn list() -> Result<(), MyErrors> {
     let company = get_command_option()?;
-    let files = list_company_files(company)?;
+    let files = list_company_files(&company)?;
 
     for file in files {
         println!("$EDITOR {:?}", file);
@@ -193,7 +193,7 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
     Ok(all_files)
 }
 
-fn list_company_files(company: String) -> Result<Vec<PathBuf>, MyErrors> {
+fn list_company_files(company: &str) -> Result<Vec<PathBuf>, MyErrors> {
     let mut files = Vec::with_capacity(64);
     let query = ["-", &company.to_lowercase(), "."].concat();
     let root = PathBuf::from("/tmp/interviews");
@@ -330,9 +330,8 @@ impl CompanyNotes {
     }
 }
 
-fn previous_company_notes() -> Result<CompanyNotes, MyErrors> {
+fn previous_company_notes(company: &str) -> Result<CompanyNotes, MyErrors> {
     let mut notes = CompanyNotes::new();
-    let company = get_command()?;
     let path = latest_company_file(company)?;
     let file = File::open(&path).unwrap();
     let mut reader = BufReader::new(file);
@@ -461,7 +460,7 @@ fn create() -> Result<(), MyErrors> {
     let boundary = generate_boundary();
 
     // Attempt to fill common metadata from previous notes.
-    if let Ok(prev_notes) = previous_company_notes() {
+    if let Ok(prev_notes) = previous_company_notes(&company) {
         notes = prev_notes;
     }
 
