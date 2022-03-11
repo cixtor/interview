@@ -254,9 +254,13 @@ fn recent() -> Result<(), MyErrors> {
             match entry.file_type() {
                 Ok(ft) if ft.is_dir() => stack.push(path),
                 Ok(ft) if ft.is_file() => {
-                    heap.push(Reverse(path));
-                    if heap.len() > 10 {
-                        heap.pop(); // drop oldest (smallest) path so heap keeps the most recent lexicographically
+                    if heap.len() < 10 {
+                        heap.push(Reverse(path));
+                    } else if let Some(Reverse(current_min)) = heap.peek() {
+                        if path > *current_min {
+                            heap.pop(); // drop oldest (smallest) path so heap keeps the most recent lexicographically
+                            heap.push(Reverse(path));
+                        }
                     }
                 }
                 Ok(_) => {}
