@@ -223,15 +223,14 @@ fn list_company_files(company: &str) -> Result<Vec<PathBuf>, MyErrors> {
                 continue;
             }
 
-            let path = entry.path();
-            let name_matches = path
-                .file_name()
-                .and_then(|name| name.to_str())
-                .map(|name| (name.ends_with(".md") || name.ends_with(".eml")) && name.contains(&query))
-                .unwrap_or(false);
-            if name_matches {
-                files.push(path);
+            let Some(name) = entry.file_name().to_str() else {
+                continue;
+            };
+            if !(name.ends_with(".md") || name.ends_with(".eml")) || !name.contains(&query) {
+                continue;
             }
+
+            files.push(entry.path());
         }
     }
 
