@@ -62,7 +62,7 @@ fn get_command_option() -> Result<String, MyErrors> {
 
 fn latest_company_file(company: &str) -> Result<PathBuf, MyErrors> {
     let company_lower = company.to_lowercase();
-    let query = ["-", &company_lower, "."].concat();
+    let query = format!("-{}.", company_lower);
     let root = PathBuf::from("/tmp/interviews");
     let mut stack = Vec::with_capacity(32);
     stack.push(root);
@@ -198,7 +198,7 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
 fn list_company_files(company: &str) -> Result<Vec<PathBuf>, MyErrors> {
     let mut files = Vec::with_capacity(64);
     let company_lower = company.to_lowercase();
-    let query = ["-", &company_lower, "."].concat();
+    let query = format!("-{}.", company_lower);
     let root = PathBuf::from("/tmp/interviews");
 
     let mut stack = Vec::with_capacity(32);
