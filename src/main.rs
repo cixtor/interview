@@ -240,8 +240,9 @@ fn list_company_files(company: &str) -> Result<Vec<PathBuf>, MyErrors> {
 
 fn recent() -> Result<(), MyErrors> {
     let year = chrono::Local::now().year();
-    let folder = ["/tmp/interviews/", &year.to_string()].concat();
-    let mut stack = vec![PathBuf::from(folder)];
+    let mut root = PathBuf::from("/tmp/interviews");
+    root.push(year.to_string());
+    let mut stack = vec![root];
     let mut heap: BinaryHeap<Reverse<PathBuf>> = BinaryHeap::with_capacity(11);
 
     while let Some(current_dir) = stack.pop() {
