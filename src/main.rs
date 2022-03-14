@@ -114,8 +114,8 @@ fn open() -> Result<(), MyErrors> {
     let path = latest_company_file(&company)?;
 
     let mut marker = 0;
-    let mut boundary = String::with_capacity(32);
-    boundary.push_str("--");
+    let mut boundary = String::from("--");
+    boundary.reserve(30); // typical boundary length
     let file = File::open(path).unwrap();
     let mut reader = BufReader::new(file);
     let mut line = String::new();
