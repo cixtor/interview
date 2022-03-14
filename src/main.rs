@@ -432,7 +432,10 @@ fn read_custom_date() -> Result<chrono::DateTime<chrono::Local>, MyErrors> {
             // Support shorthand data inputs: today@15:04
             let date = chrono::Local::now().format("%Y-%m-%d");
             let hour = &text[6..];
-            text = format!("{}T{}", date, hour);
+            text.clear();
+            text.push_str(&date.to_string());
+            text.push('T');
+            text.push_str(hour);
         }
         let tformat: &str = match text.len() {
             16 => "%Y-%m-%dT%H:%M",    // 2006-01-02T15:04
