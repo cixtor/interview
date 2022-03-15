@@ -248,7 +248,8 @@ fn recent() -> Result<(), MyErrors> {
     let year = chrono::Local::now().year();
     let mut root = PathBuf::from("/tmp/interviews");
     root.push(year.to_string());
-    let mut stack = vec![root];
+    let mut stack = Vec::with_capacity(32);
+    stack.push(root);
     let mut heap: BinaryHeap<Reverse<PathBuf>> = BinaryHeap::with_capacity(11);
 
     while let Some(current_dir) = stack.pop() {
