@@ -181,12 +181,18 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
     while let Some(current_dir) = stack.pop() {
         let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
         for entry in entries.flatten() {
-            let path = entry.path();
-            match entry.file_type() {
-                Ok(ft) if ft.is_dir() => stack.push(path),
-                Ok(ft) if ft.is_file() => all_files.push(path),
-                Ok(_) => {}
-                Err(_) => {}
+            let file_type = match entry.file_type() {
+                Ok(ft) => ft,
+                Err(_) => continue,
+            };
+
+            if file_type.is_dir() {
+                stack.push(entry.path());
+                continue;
+            }
+
+            if file_type.is_file() {
+                all_files.push(entry.path());
             }
         }
     }
