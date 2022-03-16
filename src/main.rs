@@ -64,8 +64,7 @@ fn latest_company_file(company: &str) -> Result<PathBuf, MyErrors> {
     let company_lower = company.to_lowercase();
     let query = format!("-{}.", company_lower);
     let root = PathBuf::from("/tmp/interviews");
-    let mut stack = Vec::with_capacity(32);
-    stack.push(root);
+    let mut stack = vec![root];
     let mut latest: Option<(String, PathBuf)> = None;
 
     while let Some(current_dir) = stack.pop() {
@@ -115,7 +114,6 @@ fn open() -> Result<(), MyErrors> {
 
     let mut marker = 0;
     let mut boundary = String::from("--");
-    boundary.reserve(30); // typical boundary length
     let file = File::open(path).unwrap();
     let mut reader = BufReader::new(file);
     let mut line = String::new();
@@ -174,9 +172,8 @@ fn list() -> Result<(), MyErrors> {
 }
 
 fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
-    let mut all_files = Vec::with_capacity(128);
-    let mut stack = Vec::with_capacity(32);
-    stack.push(dir);
+    let mut all_files = Vec::new();
+    let mut stack = vec![dir];
 
     while let Some(current_dir) = stack.pop() {
         let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
@@ -202,13 +199,12 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
 }
 
 fn list_company_files(company: &str) -> Result<Vec<PathBuf>, MyErrors> {
-    let mut files = Vec::with_capacity(64);
+    let mut files = Vec::new();
     let company_lower = company.to_lowercase();
     let query = format!("-{}.", company_lower);
     let root = PathBuf::from("/tmp/interviews");
 
-    let mut stack = Vec::with_capacity(32);
-    stack.push(root);
+    let mut stack = vec![root];
     while let Some(current_dir) = stack.pop() {
         let entries = match fs::read_dir(&current_dir) {
             Ok(it) => it,
@@ -248,9 +244,8 @@ fn recent() -> Result<(), MyErrors> {
     let year = chrono::Local::now().year();
     let mut root = PathBuf::from("/tmp/interviews");
     root.push(year.to_string());
-    let mut stack = Vec::with_capacity(32);
-    stack.push(root);
-    let mut heap: BinaryHeap<Reverse<PathBuf>> = BinaryHeap::with_capacity(11);
+    let mut stack = vec![root];
+    let mut heap: BinaryHeap<Reverse<PathBuf>> = BinaryHeap::new();
 
     while let Some(current_dir) = stack.pop() {
         let entries = match fs::read_dir(&current_dir) {
@@ -439,10 +434,7 @@ fn read_custom_date() -> Result<chrono::DateTime<chrono::Local>, MyErrors> {
             // Support shorthand data inputs: today@15:04
             let date = chrono::Local::now().format("%Y-%m-%d");
             let hour = &text[6..];
-            text.clear();
-            text.push_str(&date.to_string());
-            text.push('T');
-            text.push_str(hour);
+            text = format!("{}T{}", date, hour);
         }
         let tformat: &str = match text.len() {
             16 => "%Y-%m-%dT%H:%M",    // 2006-01-02T15:04
