@@ -194,7 +194,7 @@ fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
         }
     }
 
-    all_files.sort_unstable();
+    all_files.sort();
     Ok(all_files)
 }
 
@@ -236,7 +236,7 @@ fn list_company_files(company: &str) -> Result<Vec<PathBuf>, MyErrors> {
         }
     }
 
-    files.sort_unstable();
+    files.sort();
     Ok(files)
 }
 
@@ -273,7 +273,7 @@ fn recent() -> Result<(), MyErrors> {
     }
 
     let mut last_ten: Vec<_> = heap.into_iter().collect();
-    last_ten.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+    last_ten.sort_by(|a, b| a.0.cmp(&b.0));
 
     for Reverse(entry) in last_ten {
         println!("$EDITOR {:?}", entry);
@@ -306,14 +306,12 @@ fn generate_boundary() -> String {
     use rand::Rng;
     const CHARSET: &[u8] = b"0123456789abcdef";
     let mut rng = rand::thread_rng();
-    let mut text = String::with_capacity(28);
-
-    for _ in 0..28 {
-        let idx = rng.gen_range(0..CHARSET.len());
-        text.push(CHARSET[idx] as char);
-    }
-
-    text
+    (0..28)
+        .map(|_| {
+            let idx = rng.gen_range(0..CHARSET.len());
+            CHARSET[idx] as char
+        })
+        .collect()
 }
 
 #[derive(Debug)]
