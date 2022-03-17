@@ -114,8 +114,8 @@ fn open() -> Result<(), MyErrors> {
 
     let mut marker = 0;
     let mut boundary = String::from("--");
-    let file = File::open(path).unwrap();
-    let mut reader = BufReader::new(file);
+    let file = File::open(&path).unwrap();
+    let reader = BufReader::new(file);
     for (index, line) in reader.lines().enumerate() {
         if let Ok(line) = line {
             // Find the last occurrence of the email boundary.
@@ -215,7 +215,8 @@ fn list_company_files(company: &str) -> Result<Vec<PathBuf>, MyErrors> {
                 continue;
             }
 
-            let Some(name) = entry.file_name().to_str() else {
+            let name_os = entry.file_name();
+            let Some(name) = name_os.to_str() else {
                 continue;
             };
             if !(name.ends_with(".md") || name.ends_with(".eml")) || !name.contains(&query) {
