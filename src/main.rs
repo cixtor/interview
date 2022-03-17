@@ -116,38 +116,28 @@ fn open() -> Result<(), MyErrors> {
     let mut boundary = String::from("--");
     let file = File::open(path).unwrap();
     let mut reader = BufReader::new(file);
-    let mut line = String::new();
-    let mut index = 0;
-
-    loop {
-        line.clear();
-        let bytes = match reader.read_line(&mut line) {
-            Ok(n) => n,
-            Err(_) => break,
-        };
-        if bytes == 0 {
-            break;
-        }
-
-        let trimmed = line.trim_end_matches(['\r', '\n']);
-
-        if boundary.len() > 2 && trimmed == boundary {
-            marker = index;
-        } else if trimmed.contains("; boundary=") {
-            // Extract the email boundary code from the header.
-            if let Some(mark) = trimmed.chars().position(|x| x == '=') {
-                if let Some(value) = trimmed.get(mark + 1..) {
-                    boundary.push_str(value);
-                } else {
-                    return Err(MyErrors::InvalidBoundaryLine);
-                }
-            } else {
-                // Could not find an email boundary header anywhere.
-                return Err(MyErrors::InvalidBoundaryLine);
+    for (index, line) in reader.lines().enumerate() {
+        if let Ok(line) = line {
+            // Find the last occurrence of the email boundary.
+            if boundary.len() > 2 && line.eq(&boundary) {
+                marker = index;
+                continue;
             }
-        }
 
-        index += 1;
+            // Skip lines that are not a boundary header.
+            if !line.contains("; boundary=") {
+                continue;
+            }
+
+            // Extract the email boundary code from the header.
+            if let Some(mark) = line.chars().position(|x| x == '=') {
+                boundary.push_str(line.get(mark + 1..).unwrap());
+                continue;
+            }
+
+            // Could not find an email boundary header anywhere.
+            return Err(MyErrors::InvalidBoundaryLine);
+        }
     }
 
     let file_arg = format!("{}:{}", path.display(), marker);
@@ -341,8 +331,7 @@ fn previous_company_notes(company: &str) -> Result<CompanyNotes, MyErrors> {
     let mut notes = CompanyNotes::new();
     let path = latest_company_file(company)?;
     let file = File::open(&path).unwrap();
-    let mut reader = BufReader::new(file);
-    let mut line = String::new();
+    let reader = BufReader::new(file);
 
     let mut remaining = 6;
     let mut description_seen = false;
@@ -352,24 +341,13 @@ fn previous_company_notes(company: &str) -> Result<CompanyNotes, MyErrors> {
     let mut techstack_seen = false;
     let mut website_seen = false;
 
-    loop {
-        line.clear();
-        let bytes = match reader.read_line(&mut line) {
-            Ok(n) => n,
-            Err(_) => break,
-        };
-        if bytes == 0 {
-            break;
-        }
-
-        let trimmed = line.trim_end_matches(['\r', '\n']);
-
+    for line in reader.lines().flatten() {
         if remaining == 0 {
             break;
         }
 
         if !description_seen {
-            if let Some(value) = trimmed.strip_prefix("Description: ") {
+            if let Some(value) = line.strip_prefix("Description: ") {
                 notes.description = value.to_owned();
                 description_seen = true;
                 remaining -= 1;
@@ -378,7 +356,7 @@ fn previous_company_notes(company: &str) -> Result<CompanyNotes, MyErrors> {
         }
 
         if !employment_seen {
-            if let Some(value) = trimmed.strip_prefix("Employment: ") {
+            if let Some(value) = line.strip_prefix("Employment: ") {
                 notes.employment = value.to_owned();
                 employment_seen = true;
                 remaining -= 1;
@@ -387,7 +365,7 @@ fn previous_company_notes(company: &str) -> Result<CompanyNotes, MyErrors> {
         }
 
         if !headquarters_seen {
-            if let Some(value) = trimmed.strip_prefix("Headquarters: ") {
+            if let Some(value) = line.strip_prefix("Headquarters: ") {
                 notes.headquarters = value.to_owned();
                 headquarters_seen = true;
                 remaining -= 1;
@@ -396,7 +374,7 @@ fn previous_company_notes(company: &str) -> Result<CompanyNotes, MyErrors> {
         }
 
         if !industry_seen {
-            if let Some(value) = trimmed.strip_prefix("Industry: ") {
+            if let Some(value) = line.strip_prefix("Industry: ") {
                 notes.industry = value.to_owned();
                 industry_seen = true;
                 remaining -= 1;
@@ -405,7 +383,7 @@ fn previous_company_notes(company: &str) -> Result<CompanyNotes, MyErrors> {
         }
 
         if !techstack_seen {
-            if let Some(value) = trimmed.strip_prefix("TechStack: ") {
+            if let Some(value) = line.strip_prefix("TechStack: ") {
                 notes.techstack = value.to_owned();
                 techstack_seen = true;
                 remaining -= 1;
@@ -414,7 +392,7 @@ fn previous_company_notes(company: &str) -> Result<CompanyNotes, MyErrors> {
         }
 
         if !website_seen {
-            if let Some(value) = trimmed.strip_prefix("Website: ") {
+            if let Some(value) = line.strip_prefix("Website: ") {
                 notes.website = value.to_owned();
                 website_seen = true;
                 remaining -= 1;
