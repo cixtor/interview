@@ -161,33 +161,6 @@ fn list() -> Result<(), MyErrors> {
     Ok(())
 }
 
-fn list_files(dir: PathBuf) -> Result<Vec<PathBuf>, MyErrors> {
-    let mut all_files = Vec::new();
-    let mut stack = vec![dir];
-
-    while let Some(current_dir) = stack.pop() {
-        let entries = fs::read_dir(current_dir).map_err(|_| MyErrors::CannotReadDirectory)?;
-        for entry in entries.flatten() {
-            let file_type = match entry.file_type() {
-                Ok(ft) => ft,
-                Err(_) => continue,
-            };
-
-            if file_type.is_dir() {
-                stack.push(entry.path());
-                continue;
-            }
-
-            if file_type.is_file() {
-                all_files.push(entry.path());
-            }
-        }
-    }
-
-    all_files.sort();
-    Ok(all_files)
-}
-
 fn list_company_files(company: &str) -> Result<Vec<PathBuf>, MyErrors> {
     let mut files = Vec::new();
     let company_lower = company.to_lowercase();
