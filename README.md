@@ -13,9 +13,13 @@ EML file format specifications are available as per [RFC 822](http://www.ietf.or
 For safety reasons I do not provide compiled binaries of this program. However, you can build your own version of the program if you download a copy of the code and use a recent version of the Rust compiler to create a binary that is safe to use in your own machine.
 
 1. Download the code from this repository
-2. Execute this command `cargo build --release`
-3. Move the resulting binary into your system `$PATH`
-4. Run the program like so `interview [CompanyName]`
+1. Create `src/config.rs` defining your storage root, for example:
+   ```rust
+   pub const INTERVIEWS_ROOT: &str = "/path/to/interviews";
+   ```
+1. Execute this command `cargo build --release`
+1. Move the resulting binary into your system `$PATH`
+1. Run the program like so `interview [CompanyName]`
 
 ## Usage
 

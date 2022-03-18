@@ -14,6 +14,9 @@ use std::collections::BinaryHeap;
 use chrono::Datelike;
 use chrono::TimeZone;
 
+mod config;
+use crate::config::INTERVIEWS_ROOT;
+
 #[derive(Debug)]
 pub enum MyErrors {
     FileNotFound,
@@ -63,7 +66,7 @@ fn get_command_option() -> Result<String, MyErrors> {
 fn latest_company_file(company: &str) -> Result<PathBuf, MyErrors> {
     let company_lower = company.to_lowercase();
     let query = format!("-{}.", company_lower);
-    let root = PathBuf::from("/tmp/interviews");
+    let root = PathBuf::from(INTERVIEWS_ROOT);
     let mut stack = vec![root];
     let mut latest: Option<(String, PathBuf)> = None;
 
@@ -165,7 +168,7 @@ fn list_company_files(company: &str) -> Result<Vec<PathBuf>, MyErrors> {
     let mut files = Vec::new();
     let company_lower = company.to_lowercase();
     let query = format!("-{}.", company_lower);
-    let root = PathBuf::from("/tmp/interviews");
+    let root = PathBuf::from(INTERVIEWS_ROOT);
 
     let mut stack = vec![root];
     while let Some(current_dir) = stack.pop() {
@@ -206,7 +209,7 @@ fn list_company_files(company: &str) -> Result<Vec<PathBuf>, MyErrors> {
 
 fn recent() -> Result<(), MyErrors> {
     let year = chrono::Local::now().year();
-    let mut root = PathBuf::from("/tmp/interviews");
+    let mut root = PathBuf::from(INTERVIEWS_ROOT);
     root.push(year.to_string());
     let mut stack = vec![root];
     let mut heap: BinaryHeap<Reverse<PathBuf>> = BinaryHeap::new();
@@ -412,7 +415,7 @@ fn create() -> Result<(), MyErrors> {
     let basic_date = now.format("%Y-%m-%dT%H:%M:%SZ");
     let human_date = now.format("%a, %d %b %Y %H:%M:%S %z");
     let company_short = company.replace(" ", "-").to_lowercase();
-    let filename = format!("/tmp/interviews/{}/{}-{}.eml", now.year(), shortdate, company_short);
+    let filename = format!("{}/{}/{}-{}.eml", INTERVIEWS_ROOT, now.year(), shortdate, company_short);
     let file_arg = format!("{}:24", filename);
 
     let mut notes = CompanyNotes::new();
